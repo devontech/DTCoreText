@@ -9,7 +9,7 @@
 #import "DTCompatibility.h"
 #import "NSStringCSSTest.h"
 #import "NSString+CSS.h"
-#import "DTColor+HTML.h"
+#import "DTColor+Compatibility.h"
 
 @implementation NSStringCSSTest
 
@@ -185,6 +185,54 @@
 	
 	STAssertEqualObjects(@"rgb(255, 0, 0)", color, @"Color should be \"rgb(255, 0, 0)\"");
 	STAssertTrue([color isKindOfClass:[NSString class]], @"shadow count should be a string");	
+}
+
+- (void)textBackgroundColor
+{
+	NSString *style = @"font-family:Helvetica;font-weight:bold;background-color:rgb(255, 88, 44);font-size:30px;";
+	NSDictionary *dictionary = [style dictionaryOfCSSStyles];
+	id color = dictionary[@"background-color"];
+	
+	STAssertEqualObjects(@"rgb(255, 0, 0)", color, @"Background color should be \"rgb(255, 88, 44)\"");
+}
+
+- (void)testEdgeInsets
+{
+	// 4 values
+	NSString *style = @"10px 20px 30px 40px";
+	DTEdgeInsets insets = [style DTEdgeInsetsRelativeToCurrentTextSize:12.0 textScale:1.0];
+	
+	STAssertEquals(insets.top, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.left, (CGFloat)40, @"top should be 40");
+	STAssertEquals(insets.bottom, (CGFloat)30, @"top should be 30");
+	STAssertEquals(insets.right, (CGFloat)20, @"top should be 20");
+
+	// 3 values
+	style = @"10px 20px 30px";
+	insets = [style DTEdgeInsetsRelativeToCurrentTextSize:12.0 textScale:1.0];
+	
+	STAssertEquals(insets.top, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.left, (CGFloat)20, @"top should be 20");
+	STAssertEquals(insets.bottom, (CGFloat)30, @"top should be 30");
+	STAssertEquals(insets.right, (CGFloat)20, @"top should be 20");
+	
+	// 2 values
+	style = @"10px 20px";
+	insets = [style DTEdgeInsetsRelativeToCurrentTextSize:12.0 textScale:1.0];
+	
+	STAssertEquals(insets.top, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.left, (CGFloat)20, @"top should be 20");
+	STAssertEquals(insets.bottom, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.right, (CGFloat)20, @"top should be 20");
+
+	// 1 value
+	style = @"10px";
+	insets = [style DTEdgeInsetsRelativeToCurrentTextSize:12.0 textScale:1.0];
+	
+	STAssertEquals(insets.top, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.left, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.bottom, (CGFloat)10, @"top should be 10");
+	STAssertEquals(insets.right, (CGFloat)10, @"top should be 10");
 }
 
 @end
