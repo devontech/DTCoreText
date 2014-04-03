@@ -10,8 +10,8 @@
 #import <QuartzCore/QuartzCore.h>
 #import <MediaPlayer/MediaPlayer.h>
 
-#import "DTVersion.h"
 #import "DTTiledLayerWithoutFade.h"
+
 
 @interface DemoTextViewController ()
 - (void)_segmentedControlChanged:(id)sender;
@@ -56,10 +56,12 @@
 	{
 		NSMutableArray *items = [[NSMutableArray alloc] initWithObjects:@"View", @"Ranges", @"Chars", @"HTML", nil];
 		
-		if (![DTVersion osVersionIsLessThen:@"6.0"])
+#ifdef DTCORETEXT_SUPPORT_NS_ATTRIBUTES
+		if (floor(NSFoundationVersionNumber) >= DTNSFoundationVersionNumber_iOS_6_0)
 		{
 			[items addObject:@"iOS 6"];
 		}
+#endif
 		
 		_segmentedControl = [[UISegmentedControl alloc] initWithItems:items];
 		_segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
@@ -93,6 +95,12 @@
 	
 	UIBarButtonItem *debug = [[UIBarButtonItem alloc] initWithTitle:@"Debug Frames" style:UIBarButtonItemStyleBordered target:self action:@selector(debugButton:)];
 	[toolbarItems addObject:debug];
+	
+	UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+	[toolbarItems addObject:space];
+	
+	UIBarButtonItem *screenshot = [[UIBarButtonItem alloc] initWithTitle:@"Screenshot" style:UIBarButtonItemStyleBordered target:self action:@selector(screenshot:)];
+	[toolbarItems addObject:screenshot];
 	
 	if (_segmentedControl.selectedSegmentIndex == 3)
 	{
@@ -311,7 +319,7 @@
 				
 				while ((attributes = [_textView.attributedString attributesAtIndex:effectiveRange.location effectiveRange:&effectiveRange]))
 				{
-					[dumpOutput appendFormat:@"Range: (%d, %d), %@\n\n", effectiveRange.location, effectiveRange.length, attributes];
+					[dumpOutput appendFormat:@"Range: (%lu, %lu), %@\n\n", (unsigned long)effectiveRange.location, (unsigned long)effectiveRange.length, attributes];
 					effectiveRange.location += effectiveRange.length;
 					
 					if (effectiveRange.location >= [_textView.attributedString length])
@@ -333,7 +341,7 @@
 				char *bytes = (char *)[dump bytes];
 				char b = bytes[i];
 				
-				[dumpOutput appendFormat:@"%i: %x %c\n", i, b, b];
+				[dumpOutput appendFormat:@"%li: %x %c\n", (long)i, b, b];
 			}
 			_charsView.text = dumpOutput;
 			
@@ -569,7 +577,7 @@
 	{
 		// somecolorparameter has a HTML color
 		NSString *colorName = [attachment.attributes objectForKey:@"somecolorparameter"];
-		UIColor *someColor = [UIColor colorWithHTMLName:colorName];
+		UIColor *someColor = DTColorCreateWithHTMLName(colorName);
 		
 		UIView *someView = [[UIView alloc] initWithFrame:frame];
 		someView.backgroundColor = someColor;
@@ -677,7 +685,7 @@
 		}];
 		
 		NSString *word = [plainText substringWithRange:wordRange];
-		NSLog(@"%d: '%@' word: '%@'", tappedIndex, tappedChar, word);
+		NSLog(@"%lu: '%@' word: '%@'", (unsigned long)tappedIndex, tappedChar, word);
 	}
 }
 
@@ -687,7 +695,23 @@
 	[_textView.attributedTextContentView setNeedsDisplay];
 }
 
-#pragma mark DTLazyImageViewDelegate
+- (void)screenshot:(UIBarButtonItem *)sender
+{
+	UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+	
+	CGRect rect = [keyWindow bounds];
+	UIGraphicsBeginImageContextWithOptions(rect.size, YES, 0);
+	
+	CGContextRef context = UIGraphicsGetCurrentContext();
+	[keyWindow.layer renderInContext:context];
+	
+	UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+	
+	[[UIPasteboard generalPasteboard] setImage:image];
+}
+
+#pragma mark - DTLazyImageViewDelegate
 
 - (void)lazyImageView:(DTLazyImageView *)lazyImageView didChangeImageSize:(CGSize)size {
 	NSURL *url = lazyImageView.url;

@@ -23,6 +23,19 @@ static NSCache *imageCache = nil;
 	DTImage *_image;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+	self = [super initWithCoder:aDecoder];
+	if (self) {
+		_image = [aDecoder decodeObjectForKey:@"image"];
+	}
+	return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+	[super encodeWithCoder:aCoder];
+	[aCoder encodeObject:_image forKey:@"image"];
+}
+
 - (id)initWithElement:(DTHTMLElement *)element options:(NSDictionary *)options
 {
 	self = [super initWithElement:element options:options];
@@ -108,7 +121,7 @@ static NSCache *imageCache = nil;
 				else
 				{
 					// file in app bundle
-					NSBundle *bundle = [NSBundle mainBundle];
+					NSBundle *bundle = [NSBundle bundleForClass:[self class]];
 					NSString *path = [bundle pathForResource:src ofType:nil];
 					
 					if (path)
