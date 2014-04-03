@@ -1,3 +1,6 @@
 [submodule "Core/Externals/DTFoundation"]
 	path = Core/Externals/DTFoundation
 	url = git@github.com:devontech/DTFoundation.git
+[submodule "Externals/DTFoundation"]
+	path = Externals/DTFoundation
+	url = https://github.com/Cocoanetics/DTFoundation.git
