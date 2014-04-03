@@ -77,7 +77,7 @@
 	element.fontDescriptor = [[DTCoreTextFontDescriptor alloc] init]; // need to have just any font descriptor
 	element.textScale = 1.0;
 	
-	NSDictionary *styles = [stylesheet mergedStyleDictionaryForElement:element matchedSelectors:NULL];
+	NSDictionary *styles = [stylesheet mergedStyleDictionaryForElement:element matchedSelectors:NULL ignoreInlineStyle:NO];
 	[element applyStyleDictionary:styles];
 	
 	STAssertEquals(element.displayStyle, DTHTMLElementDisplayStyleBlock, @"Style merging lost block display style");
@@ -125,7 +125,7 @@
 	DTHTMLElement *element = [[DTHTMLElement alloc] initWithName:@"dummy" attributes:attributes];
 	
 	NSSet *matchedSelectors;
-	NSDictionary *styles = [stylesheet mergedStyleDictionaryForElement:element matchedSelectors:&matchedSelectors];
+	NSDictionary *styles = [stylesheet mergedStyleDictionaryForElement:element matchedSelectors:&matchedSelectors ignoreInlineStyle:NO];
 	
 	STAssertTrue([styles count]==1, @"There should be exactly one style");
 	STAssertTrue([matchedSelectors count]==1, @"There should be exactly one matched selector");
@@ -493,6 +493,18 @@
 	
 	NSString *paddingRight = [styles objectForKey:@"padding-right"];
 	STAssertTrue([paddingRight isEqualToString:@"20px"], @"margin-right should be 20px");
+}
+
+- (void)testUncompressBackgroundShorthand
+{
+	DTCSSStylesheet *stylesheet = [DTCSSStylesheet defaultStyleSheet];
+	NSMutableDictionary *styles = [NSMutableDictionary dictionary];
+
+	[styles setObject:@"url(\"topbanner.png\") #00D repeat-y fixed" forKey:@"background"];
+	[stylesheet _uncompressShorthands:styles];
+
+	NSString *backgroundColor = [styles objectForKey:@"background-color"];
+	STAssertTrue([backgroundColor isEqualToString:@"#00D"], @"background-color should be #00D");
 }
 
 @end

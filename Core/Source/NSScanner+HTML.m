@@ -96,41 +96,41 @@
 		else
 		{
 			// attribute is not quoted, we append elements until we find a ; or the string is at the end
-			NSString *value = nil;
+			NSString *valueString = nil;
 			
-			if ([self scanString:@"," intoString:&value])
+			if ([self scanString:@"," intoString:&valueString])
 			{
                 BOOL isStringOnlyCSSProperty = NO;
                 
-				if (![value isEqualToString:@","])
+				if (![valueString isEqualToString:@","])
 				{
-					[results addObject:value];
+					[results addObject:valueString];
 				}
 				else if ([attrName isEqualToString:@"font"] || ([attrName rangeOfString:@"color"].location != NSNotFound) || ([attrName rangeOfString:@"shadow"].location != NSNotFound))
 				{
-					value = [NSString stringWithFormat:@"%@%@", [results lastObject], value];
+					valueString = [NSString stringWithFormat:@"%@%@", [results lastObject], valueString];
 					[results removeLastObject];
-					[results addObject:value];
+					[results addObject:valueString];
                     
                     isStringOnlyCSSProperty = YES;
 				}
 				
-				if ([value isEqualToString:@","] && !isStringOnlyCSSProperty)
+				if ([valueString isEqualToString:@","] && !isStringOnlyCSSProperty)
 				{
 					nextIterationAddsNewEntry = YES;
 				}
 			}
-			else if ([self scanCharactersFromSet:nonWhiteCommaCharacterSet intoString:&value])
+			else if ([self scanCharactersFromSet:nonWhiteCommaCharacterSet intoString:&valueString])
 			{
-				if ([value length] && ![value isEqualToString:@","])
+				if ([valueString length] && ![valueString isEqualToString:@","])
 				{
 					if (nextIterationAddsNewEntry) {
-						[results addObject:value];
+						[results addObject:valueString];
 						nextIterationAddsNewEntry = NO;
 					} else {
-						value = [NSString stringWithFormat:@"%@ %@", [results lastObject], value];
+						valueString = [NSString stringWithFormat:@"%@ %@", [results lastObject], valueString];
 						[results removeLastObject];
-						[results addObject:value];
+						[results addObject:valueString];
 					}
 				}
 			}
@@ -151,7 +151,7 @@
 		if (results.count == 0) {
 			*value = @"";
 		} else if (results.count == 1) {
-			*value = results[0];
+			*value = [results objectAtIndex:0];
 		} else {
 			*value = results;
 		}
@@ -221,6 +221,11 @@
 
 - (BOOL)scanHTMLColor:(DTColor **)color
 {
+	return [self scanHTMLColor:color HTMLName:NULL];
+}
+
+- (BOOL)scanHTMLColor:(DTColor **)color HTMLName:(NSString **)name
+{
 	NSUInteger indexBefore = [self scanLocation];
 	
 	NSString *colorName = nil;
@@ -262,12 +267,16 @@
 		self.scanLocation = indexBefore;
 		return NO;
 	}
-	
+
 	if (color)
 	{
 		*color = foundColor;
 	}
-	
+
+	if (name) {
+		*name = colorName;
+	}
+
 	return YES;
 }
 

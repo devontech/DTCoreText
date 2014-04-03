@@ -300,15 +300,15 @@
 		{
 			if (_textScale!=1.0f)
 			{
-				paragraphStyle.minimumLineHeight = roundf(paragraphStyle.minimumLineHeight / _textScale);
-				paragraphStyle.maximumLineHeight = roundf(paragraphStyle.maximumLineHeight / _textScale);
+				paragraphStyle.minimumLineHeight = round(paragraphStyle.minimumLineHeight / _textScale);
+				paragraphStyle.maximumLineHeight = round(paragraphStyle.maximumLineHeight / _textScale);
 				
-				paragraphStyle.paragraphSpacing = roundf(paragraphStyle.paragraphSpacing/ _textScale);
-				paragraphStyle.paragraphSpacingBefore = roundf(paragraphStyle.paragraphSpacingBefore / _textScale);
+				paragraphStyle.paragraphSpacing = round(paragraphStyle.paragraphSpacing/ _textScale);
+				paragraphStyle.paragraphSpacingBefore = round(paragraphStyle.paragraphSpacingBefore / _textScale);
 				
-				paragraphStyle.firstLineHeadIndent = roundf(paragraphStyle.firstLineHeadIndent / _textScale);
-				paragraphStyle.headIndent = roundf(paragraphStyle.headIndent / _textScale);
-				paragraphStyle.tailIndent = roundf(paragraphStyle.tailIndent / _textScale);
+				paragraphStyle.firstLineHeadIndent = round(paragraphStyle.firstLineHeadIndent / _textScale);
+				paragraphStyle.headIndent = round(paragraphStyle.headIndent / _textScale);
+				paragraphStyle.tailIndent = round(paragraphStyle.tailIndent / _textScale);
 			}
 			
 			paraStyleString = [paragraphStyle cssStyleRepresentation];
@@ -401,17 +401,6 @@
 			}
 			
 			[listsToOpen enumerateObjectsUsingBlock:^(DTCSSListStyle *oneList, NSUInteger idx, BOOL *stop) {
-				
-				NSString *name;
-				
-				if ([oneList isOrdered])
-				{
-					name = @"ol";
-				}
-				else
-				{
-					name = @"ul";
-				}
 				
 				// only padding can be reconstructed so far
 				CGFloat listPadding = (paragraphStyle.headIndent - paragraphStyle.firstLineHeadIndent) / _textScale;
@@ -542,7 +531,7 @@
 		
 		// ----- SPAN enumeration
 		
-		[_attributedString enumerateAttributesInRange:paragraphRange options:0 usingBlock:^(NSDictionary *attributes, NSRange spanRange, BOOL *stop) {
+		[_attributedString enumerateAttributesInRange:paragraphRange options:0 usingBlock:^(NSDictionary *attributes, NSRange spanRange, BOOL *stopEnumerateAttributes) {
 
 			NSURL *spanURL = [attributes objectForKey:DTLinkAttribute];
 			NSString *spanAnchorName = [attributes objectForKey:DTAnchorAttribute];
@@ -578,9 +567,9 @@
 				}
 				
 				// find which custom attributes are for the link
-				NSDictionary *HTMLAttributes = [_attributedString HTMLAttributesAtIndex:currentLinkRange.location];
+				NSDictionary *localHTMLAttributes = [_attributedString HTMLAttributesAtIndex:currentLinkRange.location];
 				
-				[HTMLAttributes enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+				[localHTMLAttributes enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stopEnumerateKeysAndObjects) {
 					
 					// check if range is longer than current paragraph
 					NSRange attributeEffectiveRange = [_attributedString rangeOfHTMLAttribute:key atIndex:currentLinkRange.location];
@@ -633,6 +622,11 @@
 			}
 			
 			DTTextAttachment *attachment = [attributes objectForKey:NSAttachmentAttributeName];
+
+			if ([plainSubString isEqualToString:UNICODE_OBJECT_PLACEHOLDER]) {
+				attachment = [attributes objectForKey:@"NSAttachment"];
+				subString = @"";
+			}
 			
 			if (attachment)
 			{
@@ -747,10 +741,10 @@
 			__block BOOL needsSpanTag = NO;
 			
 			// find which custom attributes are only for this span
-			NSDictionary *HTMLAttributes = [attributes objectForKey:DTCustomAttributesAttribute];
+			NSDictionary *localHTMLAttributes = [attributes objectForKey:DTCustomAttributesAttribute];
 			NSMutableDictionary *spanLevelHTMLAttributes = [NSMutableDictionary dictionary];
 			
-			[HTMLAttributes enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+			[localHTMLAttributes enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
 				
 				// check if there is already an identical paragraph attribute
 				id valueForParagraph = [paragraphLevelHTMLAttributes objectForKey:key];
