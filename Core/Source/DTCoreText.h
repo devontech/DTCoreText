@@ -67,7 +67,9 @@
 
 #import "DTLazyImageView.h"
 #import "DTLinkButton.h"
+#ifndef DT_EXTENSION
 #import "DTWebVideoView.h"
+#endif
 #import "NSAttributedStringRunDelegates.h"
 
 #import "DTAttributedLabel.h"
