@@ -44,6 +44,8 @@
 	// private
 	NSURL *lastActionLink;
 	NSMutableSet *mediaPlayers;
+	
+	BOOL _needsAdjustInsetsOnLayout;
 }
 
 
@@ -64,13 +66,15 @@
 #endif
 		
 		_segmentedControl = [[UISegmentedControl alloc] initWithItems:items];
-		_segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
 		_segmentedControl.selectedSegmentIndex = 0;
 		[_segmentedControl addTarget:self action:@selector(_segmentedControlChanged:) forControlEvents:UIControlEventValueChanged];
 		self.navigationItem.titleView = _segmentedControl;	
 		
 		[self _updateToolbarForMode];
-
+		
+		_needsAdjustInsetsOnLayout = YES;
+		
+		self.automaticallyAdjustsScrollViewInsets = YES;
 	}
 	return self;
 }
@@ -93,13 +97,13 @@
 {
 	NSMutableArray *toolbarItems = [NSMutableArray array];
 	
-	UIBarButtonItem *debug = [[UIBarButtonItem alloc] initWithTitle:@"Debug Frames" style:UIBarButtonItemStyleBordered target:self action:@selector(debugButton:)];
+	UIBarButtonItem *debug = [[UIBarButtonItem alloc] initWithTitle:@"Debug Frames" style:UIBarButtonItemStylePlain target:self action:@selector(debugButton:)];
 	[toolbarItems addObject:debug];
 	
 	UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
 	[toolbarItems addObject:space];
 	
-	UIBarButtonItem *screenshot = [[UIBarButtonItem alloc] initWithTitle:@"Screenshot" style:UIBarButtonItemStyleBordered target:self action:@selector(screenshot:)];
+	UIBarButtonItem *screenshot = [[UIBarButtonItem alloc] initWithTitle:@"Screenshot" style:UIBarButtonItemStylePlain target:self action:@selector(screenshot:)];
 	[toolbarItems addObject:screenshot];
 	
 	if (_segmentedControl.selectedSegmentIndex == 3)
@@ -107,7 +111,6 @@
 		if (!_htmlOutputTypeSegment)
 		{
 			_htmlOutputTypeSegment = [[UISegmentedControl alloc] initWithItems:@[@"Document", @"Fragment"]];
-			_htmlOutputTypeSegment.segmentedControlStyle = UISegmentedControlStyleBar;
 			_htmlOutputTypeSegment.selectedSegmentIndex = 0;
 			
 			[_htmlOutputTypeSegment addTarget:self action:@selector(_htmlModeChanged:) forControlEvents:UIControlEventValueChanged];
@@ -257,12 +260,23 @@
 	[super viewWillDisappear:animated];
 }
 
+- (BOOL)prefersStatusBarHidden
+{
+	// prevent hiding of status bar in landscape because this messes up the layout guide calc
+	return NO;
+}
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+	_needsAdjustInsetsOnLayout = YES;
+}
+
 // this is only called on >= iOS 5
 - (void)viewDidLayoutSubviews
 {
 	[super viewDidLayoutSubviews];
 	
-	if (![self respondsToSelector:@selector(topLayoutGuide)])
+	if (![self respondsToSelector:@selector(topLayoutGuide)] || !_needsAdjustInsetsOnLayout)
 	{
 		return;
 	}
@@ -270,6 +284,8 @@
 	// this also compiles with iOS 6 SDK, but will work with later SDKs too
 	CGFloat topInset = [[self valueForKeyPath:@"topLayoutGuide.length"] floatValue];
 	CGFloat bottomInset = [[self valueForKeyPath:@"bottomLayoutGuide.length"] floatValue];
+	
+	NSLog(@"%f top", topInset);
 	
 	UIEdgeInsets outerInsets = UIEdgeInsetsMake(topInset, 0, bottomInset, 0);
 	UIEdgeInsets innerInsets = outerInsets;
@@ -300,6 +316,8 @@
 	_htmlView.contentInset = outerInsets;
 	_htmlView.contentOffset = outerScrollOffset;
 	_htmlView.scrollIndicatorInsets = outerInsets;
+	
+	_needsAdjustInsetsOnLayout = NO;
 }
 
 #pragma mark Private Methods

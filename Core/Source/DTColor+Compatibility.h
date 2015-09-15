@@ -6,7 +6,11 @@
 //  Copyright 2011 Drobnik.com. All rights reserved.
 //
 
+#import <AvailabilityMacros.h>
+
 #if TARGET_OS_IPHONE
+
+#import <UIKit/UIColor.h>
 
 /**
  Implementations of methods on NSColor/UIColor which are missing on the other platform.
@@ -48,7 +52,7 @@
  Converts an NSColor into a CGColorRef. 
  @returns A CGColorRef of this NSColor 
 */
-- (CGColorRef)CGColor;
+- (CGColorRef)CGColor DT_RETURNS_INNER_POINTER;
 #endif
 
 @end

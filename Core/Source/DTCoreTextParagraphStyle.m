@@ -43,7 +43,9 @@
 #if DTCORETEXT_SUPPORT_NS_ATTRIBUTES
 + (DTCoreTextParagraphStyle *)paragraphStyleWithNSParagraphStyle:(NSParagraphStyle *)paragraphStyle
 {
-	NSParameterAssert(paragraphStyle);
+	if ( ! paragraphStyle) {
+		paragraphStyle = [NSParagraphStyle defaultParagraphStyle];
+	}
 	
 	DTCoreTextParagraphStyle *retStyle = [[DTCoreTextParagraphStyle alloc] init];
 	
@@ -222,6 +224,7 @@
 	
 	[mps setMinimumLineHeight:_minimumLineHeight];
 	[mps setMaximumLineHeight:_maximumLineHeight];
+	[mps setLineHeightMultiple:_lineHeightMultiple];
 	
 	[mps setAlignment:DTNSTextAlignmentFromCTTextAlignment(_alignment)];
 	
@@ -321,7 +324,7 @@
 			break;
 	}
 	
-	if (_lineHeightMultiple && _lineHeightMultiple!=1.0f)
+	if (_lineHeightMultiple!=0 && _lineHeightMultiple!=1.0f)
 	{
 		NSNumber *number = DTNSNumberFromCGFloat(_lineHeightMultiple);
 		[retString appendFormat:@"line-height:%@em;", number];

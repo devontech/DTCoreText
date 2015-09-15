@@ -7,9 +7,19 @@
 //
 
 #import "DTHTMLWriter.h"
-#import "DTCoreText.h"
 #import "DTVersion.h"
 #import "NSDictionary+DTCoreText.h"
+#import "DTCSSListStyle.h"
+#import "DTCoreTextConstants.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "NSAttributedString+DTCoreText.h"
+#import "NSAttributedString+HTML.h"
+#import "DTTextAttachment.h"
+#import "NSString+HTML.h"
+#import "DTColorFunctions.h"
+
+
 
 @implementation DTHTMLWriter
 {
@@ -624,7 +634,14 @@
 			DTTextAttachment *attachment = [attributes objectForKey:NSAttachmentAttributeName];
 
 			if ([plainSubString isEqualToString:UNICODE_OBJECT_PLACEHOLDER]) {
-				attachment = [attributes objectForKey:@"NSAttachment"];
+				
+				// if there was no old-style attachment let's try new NS-style.
+				if (!attachment)
+				{
+					attachment = [attributes objectForKey:@"NSAttachment"];
+				}
+				
+				// we don't want to output the placeholder character in any case
 				subString = @"";
 			}
 			
@@ -673,7 +690,7 @@
 			
 			CGFloat kerning = [attributes kerning] / _textScale;
 			
-			if (kerning)
+			if (kerning != 0)
 			{
 				fontStyle = [fontStyle stringByAppendingFormat:@"letter-spacing:%.0fpx;", kerning];
 			}
@@ -1000,5 +1017,6 @@
 
 @synthesize attributedString = _attributedString;
 @synthesize textScale = _textScale;
+@synthesize useAppleConvertedSpace = _useAppleConvertedSpace;
 
 @end

@@ -6,10 +6,23 @@
 //  Copyright (c) 2012 Drobnik.com. All rights reserved.
 //
 
-#import "DTCoreText.h"
+#import "DTCompatibility.h"
 #import "NSAttributedString+DTCoreText.h"
 #import "DTHTMLWriter.h"
-#import "NSURL+DTComparing.h"
+#import "DTCoreTextConstants.h"
+#import "DTCoreTextFontDescriptor.h"
+#import "DTCoreTextParagraphStyle.h"
+#import "DTCSSListStyle.h"
+#import "DTImageTextAttachment.h"
+#import "NSString+Paragraphs.h"
+#import "NSDictionary+DTCoreText.h"
+#import "NSAttributedStringRunDelegates.h"
+
+#import <DTFoundation/NSURL+DTComparing.h>
+
+#if TARGET_OS_IPHONE
+#import "UIFont+DTCoreText.h"
+#endif
 
 @implementation NSAttributedString (DTCoreText)
 
@@ -240,7 +253,7 @@
 	return foundRange;
 }
 
-- (NSRange)rangeOfLinkAtIndex:(NSUInteger)location URL:(NSURL **)URL
+- (NSRange)rangeOfLinkAtIndex:(NSUInteger)location URL:(NSURL * __autoreleasing*)URL
 {
 	NSRange rangeSoFar;
 	
@@ -386,18 +399,21 @@
 		
 		font = [fontDesc newMatchingFont];
 		
+		if (font)
+		{
 #if DTCORETEXT_SUPPORT_NS_ATTRIBUTES && __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_5_1
-		if (___useiOS6Attributes)
-		{
-			UIFont *uiFont = [UIFont fontWithCTFont:font];
-			[newAttributes setObject:uiFont forKey:NSFontAttributeName];
-			
-			CFRelease(font);
-		}
-		else
+			if (___useiOS6Attributes)
+			{
+				UIFont *uiFont = [UIFont fontWithCTFont:font];
+				[newAttributes setObject:uiFont forKey:NSFontAttributeName];
+				
+				CFRelease(font);
+			}
+			else
 #endif
-		{
-			[newAttributes setObject:CFBridgingRelease(font) forKey:(id)kCTFontAttributeName];
+			{
+				[newAttributes setObject:CFBridgingRelease(font) forKey:(id)kCTFontAttributeName];
+			}
 		}
 	}
 	
